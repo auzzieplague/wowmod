@@ -1,0 +1,7 @@
+## Interface: 60200
+## Title: My Server
+## Notes: Displays Current Server Name
+## Version: 0.0.1
+
+MyServer.lua
+MyServer.xml
