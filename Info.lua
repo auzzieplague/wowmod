@@ -230,19 +230,24 @@ function GetBGInfo ()
     local leader = GetRaidLeader();
    
     -- write report
-    local txt="Alliance:"..aplayers.." players" ;
+--    local txt="Alliance:"..aplayers.." players" ;
+--    SendChatMessage(txt, output);
+    local txt=aplayers.." Alli:"..atanks.." Tanks, "..amelee.." Melee, "..aranged.." Rng";
     SendChatMessage(txt, output);
-    txt=atanks.."x Tanks, "..amelee.."x Melee, "..aranged.."x Ranged";
+    if aheals>0 then
+        txt=aheals.." Heals:"..anames;
+        SendChatMessage(txt, output);
+    end
+    txt=hplayers.." Horde:"..htanks.." Tanks, "..hmelee.." Melee, "..hranged.." Rng";
+    --txt="Horde:"..hplayers.." players" ;
+    --SendChatMessage(txt, output);
+    --txt=htanks.."x Tanks, "..hmelee.."x Melee, "..hranged.."x Ranged";
     SendChatMessage(txt, output);
-    txt=aheals.."x Heals -> "..anames;
-    SendChatMessage(txt, output);
-    txt="Horde:"..hplayers.." players" ;
-    SendChatMessage(txt, output);
-    txt=htanks.."x Tanks, "..hmelee.."x Melee, "..hranged.."x Ranged";
-    SendChatMessage(txt, output);
-    txt=hheals.."x Heals -> "..hnames;
-    SendChatMessage(txt, output);
-    SendChatMessage("Leader is -= "..leader.." =-", output);
+    if hheals>0 then
+        txt=hheals.." Heals:"..hnames;
+        SendChatMessage(txt, output);
+    end
+    SendChatMessage("Leader:"..leader, output);
 end
 
 
