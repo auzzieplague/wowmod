@@ -123,16 +123,7 @@ end
 SLASH_INFO1, SLASH_INFO2 = '/info', '/get';
 SlashCmdList["INFO"] = handler; -- Also a valid assignment strategy
 
--- toggle sticky text
-function ToggleSticky ()
-     if (INFO_TextFrame.sticky==false) then
-        INFO_TextFrame.sticky=true;
-        INFO_TextMessage("Sticky:On");
-    else
-        INFO_TextFrame.sticky=false;
-        INFO_TextMessage("Sticky:Off");
-    end
-end
+--removed sticky
 
 function GetRoleFromSpec (spec)
     i=1;
