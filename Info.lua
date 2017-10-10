@@ -1,5 +1,5 @@
-local output ="INSTANCE_CHAT";
---local output ="SAY";
+--local output ="INSTANCE_CHAT";
+local output ="SAY";
 
 
 --roles and spec tables
@@ -11,7 +11,8 @@ specs={
  "Retribution", "Discipline", "Holy", "Shadow",
  "Assassination", "Combat", "Subtlety", "Elemental",
  "Enhancement", "Restoration", "Affliction", "Demonology",
- "Destruction", "Arms", "Fury", "Protection"
+ "Destruction", "Arms", "Fury", "Protection",
+ "Vengeance","Havoc"
 }
 roles={
  "Tank", "Melee", "Melee", "Ranged", "Melee",
@@ -21,26 +22,9 @@ roles={
  "Melee", "Healer", "Healer", "Ranged",
  "Melee", "Melee", "Melee", "Ranged",
  "Melee", "Healer", "Ranged", "Ranged",
- "Ranged", "Melee", "Melee", "Tank"
+ "Ranged", "Melee", "Melee", "Tank",
+ "Tank","Melee"
 }
-
---setup output sandbox
---INFO_box = CreateFrame("Frame");
---INFO_box:SetBackdrop(StaticPopup1:GetBackdrop());
---INFO_box:ClearAllPoints();
---INFO_box.left = 0;
---INFO_box.top = 50;
---INFO_box:SetHeight(50);
---INFO_box:SetWidth(300);
---INFO_box:SetPoint("TOPLEFT", ChatFrame1,INFO_box.left, INFO_box.top);
---INFO_box:SetMovable(true);
---INFO_box:EnableMouse(true);
---INFO_box:RegisterForDrag("LeftButton");
---INFO_box:SetScript("OnDragStart",function() INFO_box:StartMoving() end);
---INFO_box:SetScript("OnDragStop", function() INFO_box:StopMovingOrSizing() INFO_TextFrame.X,INFO_TextFrame.Y = INFO_box:GetCenter() end);
---INFO_box:SetScript("OnEnter",function() INFO_box:SetFrameAlpha(1,INFO_box) end);
---INFO_box:SetScript("OnLeave",function() INFO_box:SetFrameAlpha(0,INFO_box) end);
-
 
 --setup output text over box
 INFO_TextFrame = CreateFrame("Frame");
@@ -81,9 +65,9 @@ end
 
 local function ShowCommandList()
     local cmds = "Info Tool Command List:";
-    cmds = cmds.."/info me, bg, stats, sticky";
-    cmds = cmds.."bg, ashran, healers, tanks";
-    cmds = cmds.."cleanbags, emptybags, vendorall";
+    cmds = cmds.."/info me, bg, stats, sticky\n";
+    cmds = cmds.."bg, ashran, healers, tanks\n";
+    cmds = cmds.."cleanbags, emptybags, vendorall\n";
     cmds = cmds.."cleantracker";
     print (cmds);
 end
@@ -156,7 +140,9 @@ local function handler(msg, editbox)
      elseif msg == 'sticky' then
         ToggleSticky();
      elseif msg =='bg' then
-        GetBGInfo ();
+        GetBGInfo();
+	elseif msg =='healers' then
+        GetHealers();
      elseif msg =='stats' then
         GetSpecInfo();
      elseif msg =='cleantracker' then
@@ -283,8 +269,6 @@ function GetBGInfo ()
     local leader = GetRaidLeader();
    
     -- write report
---    local txt="Alliance:"..aplayers.." players" ;
---    SendChatMessage(txt, output);
     local txt=aplayers.." Alli:"..atanks.." Tanks, "..amelee.." Melee, "..aranged.." Rng";
     SendChatMessage(txt, output);
     if aheals>0 then
@@ -292,9 +276,7 @@ function GetBGInfo ()
         SendChatMessage(txt, output);
     end
     txt=hplayers.." Horde:"..htanks.." Tanks, "..hmelee.." Melee, "..hranged.." Rng";
-    --txt="Horde:"..hplayers.." players" ;
-    --SendChatMessage(txt, output);
-    --txt=htanks.."x Tanks, "..hmelee.."x Melee, "..hranged.."x Ranged";
+ 
     SendChatMessage(txt, output);
     if hheals>0 then
         txt=hheals.." Heals:"..hnames;
@@ -303,7 +285,48 @@ function GetBGInfo ()
     SendChatMessage("Leader:"..leader, output);
 end
 
+function GetHealers ()
+    -- counters
+    local hheals=0;
+    local hnames="";
+    local aheals=0;
+    local anames="";
 
+    
+    --loop through leaderboard, grab specs 
+    for i=1, GetNumBattlefieldScores() do
+        name, killingBlows, honorableKills, deaths, honorGained, 
+        faction, race, class, classToken, damageDone, healingDone, 
+        bgRating, ratingChange, preMatchMMR, mmrChange, talentSpec = GetBattlefieldScore(i);
+        local role=GetRoleFromSpec(talentSpec);
+        local unitname = split(name, "-");
+        if faction==1 then --alliance
+            if role == "Healer" then 
+                aheals=aheals+1;
+               anames=anames.."["..unitname[1].."] ";
+            end
+        else --horde
+            if role == "Healer" then 
+                hheals=hheals+1;
+                hnames=hnames.."["..unitname[1].."] ";
+            end
+        end
+    end
+ 
+
+    if aheals>0 then
+        txt=aheals.."Alli Healers:"..anames;
+        SendChatMessage(txt, output);
+		else
+		SendChatMessage("Alliance have no healers!", output);
+    end
+    if hheals>0 then
+        txt=hheals.."Horde Heals:"..hnames;
+        SendChatMessage(txt, output);
+		else
+		SendChatMessage("Horde have no healers!", output);
+    end
+end
 
 -- display ashran info text
 function GetAshranInfo ()
