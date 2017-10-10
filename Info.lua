@@ -24,17 +24,23 @@ roles={
  "Ranged", "Melee", "Melee", "Tank"
 }
 
---setup output box
-INFO_box = CreateFrame("Frame")
-INFO_box.left =5;
-INFO_box.top =-170;
+--setup output sandbox
+--INFO_box = CreateFrame("Frame");
+--INFO_box:SetBackdrop(StaticPopup1:GetBackdrop());
+--INFO_box:ClearAllPoints();
+--INFO_box.left = 0;
+--INFO_box.top = 50;
+--INFO_box:SetHeight(50);
+--INFO_box:SetWidth(300);
+--INFO_box:SetPoint("TOPLEFT", ChatFrame1,INFO_box.left, INFO_box.top);
+--INFO_box:SetMovable(true);
+--INFO_box:EnableMouse(true);
+--INFO_box:RegisterForDrag("LeftButton");
+--INFO_box:SetScript("OnDragStart",function() INFO_box:StartMoving() end);
+--INFO_box:SetScript("OnDragStop", function() INFO_box:StopMovingOrSizing() INFO_TextFrame.X,INFO_TextFrame.Y = INFO_box:GetCenter() end);
+--INFO_box:SetScript("OnEnter",function() INFO_box:SetFrameAlpha(1,INFO_box) end);
+--INFO_box:SetScript("OnLeave",function() INFO_box:SetFrameAlpha(0,INFO_box) end);
 
-INFO_box:ClearAllPoints()
-INFO_box:SetBackdrop(StaticPopup1:GetBackdrop())
-INFO_box:SetHeight(100)
-INFO_box:SetWidth(300)
-INFO_box:SetPoint("LEFT", INFO_box.left, INFO_box.top)
-INFO_box:SetMovable(true);
 
 --setup output text over box
 INFO_TextFrame = CreateFrame("Frame");
@@ -46,13 +52,15 @@ INFO_TextFrame:Hide();
 INFO_TextFrame.text = INFO_TextFrame:CreateFontString(nil, "BACKGROUND", "GameFontNormalSmall");
 INFO_TextFrame.text:SetAllPoints();
 INFO_TextFrame.text:SetJustifyH("LEFT");
-INFO_TextFrame:SetPoint("LEFT", INFO_box.left+20, INFO_box.top+20);
+INFO_TextFrame.left=5;
+INFO_TextFrame.top=-170;
+INFO_TextFrame:SetPoint("LEFT", INFO_TextFrame.left, INFO_TextFrame.top);
 INFO_TextFrameTime = 0;
 INFO_TextFrame.sticky=false;
-INFO_TextFrame.fadetime=10;
+INFO_TextFrame.fadetime=5;
 
 
--- fade function
+-- fade function (must not be local for callbacks)
 function INFO_TextFrame_OnUpdate()
   if (INFO_TextFrame.sticky == false ) then 
       if (INFO_TextFrameTime < GetTime() - INFO_TextFrame.fadetime) then
@@ -72,12 +80,51 @@ function INFO_TextMessage(message)
 end
 
 local function ShowCommandList()
-    local cmds = "/info [command]\n";
-    cmds = cmds.."me - char info\n";
-    cmds = cmds.."bg - battleground info\n";
-    cmds = cmds.."cleanup - cleanup tracker";
+    local cmds = "Info Tool Command List:";
+    cmds = cmds.."/info me, bg, stats, sticky";
+    cmds = cmds.."bg, ashran, healers, tanks";
+    cmds = cmds.."cleanbags, emptybags, vendorall";
+    cmds = cmds.."cleantracker";
     print (cmds);
 end
+
+--item max refers to cuttof point 4=rare
+local function VendorBags(itemMax)
+    for b=0,4 
+    do for s=1,GetContainerNumSlots(b) 
+        do l=GetContainerItemLink(b,s) 
+            if l then 
+                itemName, itemLink, itemRarity, itemLevel, itemMinLevel, itemType, itemSubType, itemStackCount, itemEquipLoc, itemTexture, itemSellPrice=GetItemInfo(l) 
+                if (itemRarity < itemMax) then 
+                    if (itemName ~= "Hearthstone") then 
+                        UseContainerItem(b,s)
+                    end
+                    
+                end 
+            end 
+        end 
+    end
+end
+
+--item max refers to cuttof point 4=rare
+local function CleanBags (itemMax)
+    for b=0,4 
+    do for s=1,GetContainerNumSlots(b) 
+        do l=GetContainerItemLink(b,s) 
+            if l then 
+                itemName, itemLink, itemRarity, itemLevel, itemMinLevel, itemType, itemSubType, itemStackCount, itemEquipLoc, itemTexture, itemSellPrice=GetItemInfo(l) 
+                if (itemRarity < itemMax) then 
+                    if (itemName ~= "Hearthstone") then 
+                        PickupContainerItem(b,s) DeleteCursorItem()
+                        --print (itemLink.." > "..itemRarity)
+                    end
+                    
+                end 
+            end 
+        end 
+    end
+end
+
 
 -- cleanup objective / achievement tracker
 local function CleanTracker ()
@@ -92,7 +139,7 @@ local function CleanTracker ()
 end
 
 -- initial call from xml file
-function INFO(self)
+function Info(self)
     ShowCommandList();
 end
 
@@ -112,8 +159,14 @@ local function handler(msg, editbox)
         GetBGInfo ();
      elseif msg =='stats' then
         GetSpecInfo();
-     elseif msg =='cleanup' then
+     elseif msg =='cleantracker' then
         CleanTracker();
+     elseif msg =='cleanbags' then
+        CleanBags(4);
+      elseif msg =='emptybags' then
+        CleanBags(8);
+      elseif msg =='vendorall' then
+        VendorBags(8);
      else
         ShowCommandList();
      end
@@ -123,7 +176,16 @@ end
 SLASH_INFO1, SLASH_INFO2 = '/info', '/get';
 SlashCmdList["INFO"] = handler; -- Also a valid assignment strategy
 
---removed sticky
+-- toggle sticky text
+function ToggleSticky ()
+     if (INFO_TextFrame.sticky==false) then
+        INFO_TextFrame.sticky=true;
+        INFO_TextMessage("Sticky:On");
+    else
+        INFO_TextFrame.sticky=false;
+        INFO_TextMessage("Sticky:Off");
+    end
+end
 
 function GetRoleFromSpec (spec)
     i=1;
